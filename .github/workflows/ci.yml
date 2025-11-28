@@ -1,12 +1,10 @@
-name: Production CI
+name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -27,19 +25,18 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.22
+          go-version: '1.22'
           cache: true
 
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
-          path: |
-            ~/go/pkg/mod
+          path: ~/go/pkg/mod
           key: go-mod-${{ hashFiles('backend/go.sum') }}
           restore-keys: |
             go-mod-
 
-      - name: Install deps
+      - name: Install dependencies
         working-directory: backend
         run: go mod download
 
@@ -70,6 +67,7 @@ jobs:
         with:
           name: backend-build
           path: build/aran-mcp
+
   frontend:
     name: Frontend — Install, Lint, Build, Test
     runs-on: ubuntu-latest
@@ -81,39 +79,38 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: "npm"
+          node-version: '18'
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:
-          path: |
-            frontend/.next/cache
+          path: frontend/.next/cache
           key: next-cache-${{ hashFiles('frontend/**/*.[jt]s', 'frontend/**/*.[jt]sx') }}
           restore-keys: |
             next-cache-
 
       - name: Install dependencies
-        run: npm ci
         working-directory: frontend
+        run: npm ci
 
       - name: Lint
-        run: npm run lint
         working-directory: frontend
+        run: npm run lint
 
       - name: Type-check
-        run: npm run type-check
         working-directory: frontend
+        run: npm run type-check
 
       - name: Build
-        run: npm run build
         working-directory: frontend
+        run: npm run build
 
       - name: Run tests
         if: ${{ hashFiles('frontend/**/*.test.*') != '' }}
-        run: npm test
         working-directory: frontend
+        run: npm test
 
       - name: Upload frontend build artifact
         uses: actions/upload-artifact@v4
