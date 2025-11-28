@@ -10,36 +10,35 @@ on:
 
 jobs:
   backend:
-  name: Build & Test Backend (Go)
-  runs-on: ubuntu-latest
+    name: Build & Test Backend (Go)
+    runs-on: ubuntu-latest
 
-  defaults:
-    run:
-      working-directory: backend
+    defaults:
+      run:
+        working-directory: backend
 
-  steps:
-    - uses: actions/checkout@v5
+    steps:
+      - uses: actions/checkout@v5
 
-    - name: Setup Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
 
-    - name: Install dependencies
-      run: go mod download
+      - name: Install dependencies
+        run: go mod download
 
-    - name: Run tests
-      run: go test ./...
+      - name: Run tests
+        run: go test ./...
 
-    - name: Lint (optional)
-      run: |
-        if command -v golangci-lint > /dev/null; then
-          golangci-lint run
-        else
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run
-        fi
-
+      - name: Lint (optional)
+        run: |
+          if command -v golangci-lint > /dev/null; then
+            golangci-lint run
+          else
+            go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+            golangci-lint run
+          fi
 
   frontend:
     name: Build & Test Frontend (Next.js)
