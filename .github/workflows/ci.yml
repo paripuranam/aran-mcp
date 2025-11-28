@@ -2,15 +2,21 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   backend:
-    name: Build & Test Backend (Go)
+    name: Backend — Build & Test (Go)
     runs-on: ubuntu-latest
 
     defaults:
@@ -18,49 +24,81 @@ jobs:
         working-directory: backend
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.22'
+          cache: true
 
       - name: Install dependencies
         run: go mod download
 
-      - name: Run tests
-        run: go test ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: backend
 
-      - name: Lint (optional)
+      - name: Run tests
+        run: go test ./... -v -coverprofile=coverage.out
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
+
+      - name: Build production binary
         run: |
-          if command -v golangci-lint > /dev/null; then
-            golangci-lint run
-          else
-            go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-            golangci-lint run
-          fi
+          mkdir -p ../build
+          go build -o ../build/aran-mcp ./cmd/server
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: build/aran-mcp
 
   frontend:
-    name: Build & Test Frontend (Next.js)
+    name: Frontend — Build & Test (Next.js)
     runs-on: ubuntu-latest
     needs: backend
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm ci
-        working-directory: frontend
 
-      - name: Lint & Type-check
-        run: npm run lint && npm run build
+      - name: Lint
         working-directory: frontend
+        run: npm run lint
+
+      - name: Type-check
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
 
       - name: Run tests (if any)
-        run: npm test
+        if: ${{ hashFiles('frontend/**/*.test.*') != '' }}
         working-directory: frontend
+        run: npm test
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/.next
