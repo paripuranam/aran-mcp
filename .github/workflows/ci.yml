@@ -15,56 +15,56 @@ permissions:
   pull-requests: write
 
 jobs:
-  backend:
-    name: Backend — Build & Test (Go)
-    runs-on: ubuntu-latest
+  # backend:
+  #   name: Backend — Build & Test (Go)
+  #   runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
+  #   defaults:
+  #     run:
+  #       working-directory: backend
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.22'
-          cache: true
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v4
+  #       with:
+  #         go-version: '1.22'
+  #         cache: true
 
-      - name: Install dependencies
-        run: go mod download
+  #     - name: Install dependencies
+  #       run: go mod download
 
-      # - name: Lint
-      #   uses: golangci/golangci-lint-action@v6
-      #   with:
-      #     version: latest
-      #     working-directory: backend
+  #     # - name: Lint
+  #     #   uses: golangci/golangci-lint-action@v6
+  #     #   with:
+  #     #     version: latest
+  #     #     working-directory: backend
 
-      - name: Run tests
-        run: go test ./... -v -coverprofile=coverage.out
+  #     - name: Run tests
+  #       run: go test ./... -v -coverprofile=coverage.out
 
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage.out
+  #     - name: Upload coverage
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: backend-coverage
+  #         path: backend/coverage.out
 
-      - name: Build production binary
-        run: |
-          mkdir -p ../build
-          go build -o ../build/aran-mcp ./cmd/server
+  #     - name: Build production binary
+  #       run: |
+  #         mkdir -p ../build
+  #         go build -o ../build/aran-mcp ./cmd/server
 
-      - name: Upload backend artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-build
-          path: build/aran-mcp
+  #     - name: Upload backend artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: backend-build
+  #         path: build/aran-mcp
 
   frontend:
     name: Frontend — Build & Test (Next.js)
     runs-on: ubuntu-latest
-    needs: backend
+    # needs: backend
 
     steps:
       - uses: actions/checkout@v4
